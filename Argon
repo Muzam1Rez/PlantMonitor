@@ -1,0 +1,48 @@
+
+int boardLed = D7; //LED D7 for testing purposes
+
+int moisture_pin = A1; //connection point for moisture sensor
+
+bool messageSent = false; //variable for checking if notification has been sent to phone
+
+String plantWatered = "Thanks for Watering me";
+String thirsty = "thirsty";
+
+void setup() {
+    pinMode(boardLed,OUTPUT); //output to turn on LED for setup
+    pinMode(moisture_pin,INPUT); //Input from moisture sensor
+    
+    //Flashes LED to indicate that flash is successful.
+    digitalWrite(boardLed,HIGH);
+    delay(2000);
+    digitalWrite(boardLed,LOW);
+    delay(2000);
+    digitalWrite(boardLed,HIGH);
+    delay(2000);
+    digitalWrite(boardLed,LOW);
+    delay(2000);
+}
+
+void loop() 
+{
+    //digitalWrite(boardLed,HIGH);
+    // Now we'll take some readings...
+    int moisture_analog = analogRead(moisture_pin); // read capacitive sensor
+    float moisture_percentage = (100 - ((moisture_analog/4095.00) * 100 ));
+
+    String plantStatus_percentage = String(moisture_percentage);
+
+    if (moisture_percentage <= 28)
+    { //Checks if moisture percentage is below threshold and also checks if the water message has been sent
+      Particle.publish("moisturePercentage", plantStatus_percentage, PRIVATE);//Publishes for message to be sent
+      Particle.publish("thirsty", thirsty, PRIVATE); //used to create IFTTT trigger
+    }
+    if (moisture_percentage > 40)
+    { //Checks if moisture levels have gone back up and also checks if message has been sent
+        Particle.publish("plantWatered", plantWatered, PRIVATE);
+    }
+    
+    Particle.publish("plantStatus_percentage", plantStatus_percentage, PRIVATE); //Publish command for logging data and sending it to thingspeak
+    //digitalWrite(boardLed,LOW);
+    delay(5000);
+}
